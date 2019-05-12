@@ -3,6 +3,7 @@ package com.example.ecoapp;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.telephony.SmsMessage;
@@ -10,20 +11,34 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.text.Normalizer;
+import java.time.LocalDateTime;
 
 public class SmsReceiver extends BroadcastReceiver {
 
     private static final String SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
     private static final String TAG = "SmsBroadcastReceiver";
+    private static final String SHARED_PREFS = "SsharedPrefs";
+
+
+    private String name = "";
+    private String phoneNumber= "";
+    private DatabaseHelper db;
+    private boolean isNameSet = false;
     String msg, phoneNo = "";
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        /*StringBuilder stb = new StringBuilder();
-        stb.append("Action: " + intent.getAction());
-        String log = stb.toString();
-        Toast.makeText(context, log, Toast.LENGTH_SHORT).show();*/
-        Log.i(TAG, "Intent Received: " + intent.getAction());
+        Log.i("SERVICE","BEFORE startservice");
+        context.startService(new Intent(context, SmsService.class));
+        Log.i("SERVICE","AFTER startservice");
+        db = new DatabaseHelper(context);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARED_PREFS,Context.MODE_PRIVATE);
+        this.isNameSet =sharedPreferences.getBoolean("isNameSet",false);
+
+        if(this.isNameSet){
+            name = sharedPreferences.getString("username", "DefaultUser");
+            phoneNumber = sharedPreferences.getString("phoneNumber", "123456789");
+        }
 
         if(intent.getAction() == SMS_RECEIVED) {
             Bundle dataBundle = intent.getExtras();
@@ -43,17 +58,15 @@ public class SmsReceiver extends BroadcastReceiver {
                     phoneNo = message[i].getOriginatingAddress();
                 }
                 Toast.makeText(context,"Message: " + msg + "\nNumber: " + phoneNo, Toast.LENGTH_LONG ).show();
-                if(phoneNo.equals(MainActivity.getPhoneNumber()) && MainActivity.getPhoneNumber()!= null) {
-                    //Toast.makeText(context,"Érkezett a banktól SMS!\n", Toast.LENGTH_LONG).show();
+
+                if(phoneNo.equals(phoneNumber)) {
                     String convertedMsg = Normalizer.normalize(msg,Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "").toLowerCase();
 
-                    /*Toast.makeText(context,"Érkezett a banktól SMS!\nÖsszeg: " + getForintValueOfString(convertedMsg)
-                            + "\nTípus: " + getTypeValueOfString(convertedMsg)
-                            + "\nPartner: " + getPartnerValueOfString(convertedMsg), Toast.LENGTH_LONG).show();*/
-                    boolean isDataInserted = MainActivity.insertData(getForintValueOfString(convertedMsg),getTypeValueOfString(convertedMsg),getPartnerValueOfString(convertedMsg));
-                    //MainActivity.setBalance(getBalanceFromString(convertedMsg));
-                    Toast.makeText(context, (isDataInserted? "SMS adatai elmentve!" : "SMS adatait nem sikerült elmenteni") + "\nEgyenlege: " + getBalanceFromString(convertedMsg), Toast.LENGTH_LONG).show(); //ird majd at (ne string literalok legyen itt)
+                    boolean isDataInserted = insertData(getForintValueOfString(convertedMsg),getTypeValueOfString(convertedMsg),getPartnerValueOfString(convertedMsg));
+                    Toast.makeText(context, (isDataInserted? "SMS adatai elmentve!" : "SMS adatait nem sikerült elmenteni") + "\n", Toast.LENGTH_LONG).show(); //ird majd at (ne string literalok legyen itt)
 
+                } else {
+                    Toast.makeText(context,"NULL", Toast.LENGTH_LONG ).show();
                 }
             }
         }
@@ -99,7 +112,7 @@ public class SmsReceiver extends BroadcastReceiver {
         if(convertedMsg.contains("vasarlas") || convertedMsg.contains("kp.felvet")){
             return convertedMsg.substring(convertedMsg.indexOf(".-ft")+5, convertedMsg.indexOf("egyenleg"));
         } else if(convertedMsg.contains("jovairas")){
-            String name = Normalizer.normalize(MainActivity.getName(),Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "").toLowerCase();
+            String name = Normalizer.normalize(this.name,Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "").toLowerCase();
             if(convertedMsg.contains(name)) {
                 return convertedMsg.substring(convertedMsg.lastIndexOf("ft") + 2, convertedMsg.indexOf(name));
             } else {
@@ -127,7 +140,10 @@ public class SmsReceiver extends BroadcastReceiver {
         return -1;
     }
 
+    private  boolean insertData(int value, String type, String partner){
+        return db.insertData(LocalDateTime.now().toString(),value,type,partner);
 
+    }
 
 
 }

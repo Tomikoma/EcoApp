@@ -10,7 +10,6 @@ public class ErrorFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(this.getTag())
                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {

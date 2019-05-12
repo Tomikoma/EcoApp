@@ -21,40 +21,28 @@ public class SetUsernameFragment extends DialogFragment implements OnEditorActio
     private EditText phoneEditText;
 
     public SetUsernameFragment() {
-        // Empty constructor is required for DialogFragment
-        // Make sure not to add arguments to the constructor
-        // Use `newInstance` instead as shown below
+
     }
 
-    // 1. Defines the listener interface with a method passing back data result.
     public interface EditNameDialogListener {
         void onFinishEditDialog(String name, String phone);
     }
 
-    // ...
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
 
         super.onViewCreated(view, savedInstanceState);
-        // Get field from view
         nameEditText = (EditText) view.findViewById(R.id.nameEditView);
         phoneEditText = (EditText) view.findViewById(R.id.phoneEditView);
-        // Fetch arguments from bundle and set title
         String title = getArguments().getString("title", "Enter Name");
         getDialog().setTitle(title);
-        // Show soft keyboard automatically and request focus to field
         nameEditText.requestFocus();
         getDialog().getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        // ...
-        // 2. Setup a callback when the "Done" button is pressed on keyboard
-        //nameEditText.setOnEditorActionListener(this);
         phoneEditText.setOnEditorActionListener(this);
     }
 
-    // Fires whenever the textfield has an action performed
-    // In this case, when the "Done" button is pressed
-    // REQUIRES a 'soft keyboard' (virtual keyboard)
+
     @Override
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
         if (EditorInfo.IME_ACTION_DONE == actionId) {
@@ -85,52 +73,4 @@ public class SetUsernameFragment extends DialogFragment implements OnEditorActio
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.dialog_setusername, container);
     }
-
-
-
-
-    //@Override
-    /*public Dialog onCreateDialog(Bundle savedInstanceState) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        LayoutInflater inflater = requireActivity().getLayoutInflater();
-        final TextView userView = inflater.inflate(R.layout.dialog_setusername, null).findViewById(R.id.txt_your_name);
-        builder.setView(inflater.inflate(R.layout.dialog_setusername, null))
-                .setMessage("Felhasználónév beállítása")
-                .setPositiveButton("ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-
-            }
-        })
-                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        // User cancelled the dialog
-                    }
-                });
-        return builder.create();
-    }*/
-
-
-    /*
-    private void sendString(String str){
-        this.mListener.onComplete(str);
-    }
-
-
-    public static interface OnCompleteListener {
-        public abstract void onComplete(String username);
-    }
-
-    private OnCompleteListener mListener;
-
-    // make sure the Activity implemented it
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            this.mListener = (OnCompleteListener)activity;
-        }
-        catch (final ClassCastException e) {
-            throw new ClassCastException(activity.toString() + " must implement OnCompleteListener");
-        }
-    }*/
 }

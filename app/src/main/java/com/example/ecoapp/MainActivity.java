@@ -1,7 +1,11 @@
 package com.example.ecoapp;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -10,6 +14,7 @@ import android.database.Cursor;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,7 +30,6 @@ import java.time.LocalDateTime;
 public class MainActivity extends AppCompatActivity implements SetUsernameFragment.EditNameDialogListener{
 
     private BroadcastReceiver br;
-
     private static final int MY_PERMISSIONS_REQUEST_RECEIVE_SMS = 0;
     private static final String SHARED_PREFS = "SsharedPrefs";
     public static final String CREDIT = "Jóvárírás";
@@ -36,9 +40,34 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
     private TextView nameView;
     private TextView phoneView;
     private boolean isNameSet = false;
+
+    private SmsService smsService;
+    Intent serviceIntent;
+
+    Context ctx;
+
+    private Context getCtx(){
+        return this.ctx;
+    }
+
     private static String phoneNumber;
     private static String name;
     private static DatabaseHelper db;
+
+    private static final Intent[] POWERMANAGER_INTENTS = {
+            new Intent().setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity")),
+            new Intent().setComponent(new ComponentName("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity")),
+            new Intent().setComponent(new ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity")),
+            new Intent().setComponent(new ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.appcontrol.activity.StartupAppControlActivity")),
+            new Intent().setComponent(new ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity")),
+            new Intent().setComponent(new ComponentName("com.coloros.safecenter", "com.coloros.safecenter.startupapp.StartupAppListActivity")),
+            new Intent().setComponent(new ComponentName("com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity")),
+            new Intent().setComponent(new ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity")),
+            new Intent().setComponent(new ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.BgStartUpManager")),
+            new Intent().setComponent(new ComponentName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity")),
+            new Intent().setComponent(new ComponentName("com.samsung.android.lool", "com.samsung.android.sm.ui.battery.BatteryActivity")),
+            new Intent().setComponent(new ComponentName("com.htc.pitroad", "com.htc.pitroad.landingpage.activity.LandingPageActivity")),
+            new Intent().setComponent(new ComponentName("com.asus.mobilemanager", "com.asus.mobilemanager.MainActivity"))};
 
 
 
@@ -80,15 +109,28 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
             this.nameView.setText(name);
             this.phoneView.setText(phoneNumber);
 
-            //Toast.makeText(this, "Data loaded\nisNameSet: " + this.isNameSet, Toast.LENGTH_LONG).show();
         } else {
             setUser();
         }
 
+        smsService = new SmsService(getCtx());
+        serviceIntent = new Intent(this, SmsService.class);
 
-        this.br = new SmsReceiver();
-        IntentFilter filter = new IntentFilter("android.provider.Telephony.SMS_RECEIVED");
-        this.registerReceiver(this.br,filter);
+        if(!isMyServiceRunning(SmsService.class)){
+            startService(serviceIntent);
+        }
+    }
+
+    private  boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                Log.i ("isMyServiceRunning?", true+"");
+                return true;
+            }
+        }
+        Log.i ("isMyServiceRunning?", false+"");
+        return false;
     }
 
     public void launchStatistics(View view) {
@@ -134,10 +176,7 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
     }
 
 
-    public static boolean insertData(int value, String type, String partner){
-        return db.insertData(LocalDateTime.now().toString(),value,type,partner);
 
-    }
 
     public static String getPhoneNumber() {
         return phoneNumber;
@@ -203,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver(this.br);
+        stopService(serviceIntent);
 
         super.onDestroy();
     }

@@ -32,7 +32,6 @@ public class LatestFragment extends DialogFragment {
     private TextView partnerView;
 
     public LatestFragment() {
-        // Required empty public constructor
     }
 
     public static LatestFragment newInstance(String date, int value, String partner) {
@@ -59,7 +58,6 @@ public class LatestFragment extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_latest, container, false);
     }
 
