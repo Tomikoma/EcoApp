@@ -118,10 +118,7 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         IntentFilter intentFilter = new IntentFilter("android.provider.Telephony.SMS_RECEIVED");
         br = new SmsReceiver();
         registerReceiver(br,intentFilter);
-        
-        if(!isMyServiceRunning(SmsService.class)){
-            startService(serviceIntent);
-        }
+
     }
 
     private  boolean isMyServiceRunning(Class<?> serviceClass) {
