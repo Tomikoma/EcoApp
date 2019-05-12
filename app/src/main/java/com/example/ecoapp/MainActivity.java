@@ -112,10 +112,13 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         } else {
             setUser();
         }
-
+        /*
         smsService = new SmsService(getCtx());
-        serviceIntent = new Intent(this, SmsService.class);
-
+        serviceIntent = new Intent(this, SmsService.class);*/
+        IntentFilter intentFilter = new IntentFilter("android.provider.Telephony.SMS_RECEIVED");
+        br = new SmsReceiver();
+        registerReceiver(br,intentFilter);
+        
         if(!isMyServiceRunning(SmsService.class)){
             startService(serviceIntent);
         }
@@ -242,7 +245,8 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
 
     @Override
     protected void onDestroy() {
-        stopService(serviceIntent);
+        //stopService(serviceIntent);
+        unregisterReceiver(br);
 
         super.onDestroy();
     }
