@@ -28,14 +28,16 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
 
     private static final int MY_PERMISSIONS_REQUEST_RECEIVE_SMS = 0;
     private static final String SHARED_PREFS = "SsharedPrefs";
+    public static final String CREDIT = "Jóvárírás";
+    public static final String SHOPPING = "Vásárlás kártyával";
+    public static final String PICKUP = "Készpénzfelvétel";
+
 
     private TextView nameView;
     private TextView phoneView;
-    private static TextView balanceView;
     private boolean isNameSet = false;
     private static String phoneNumber;
     private static String name;
-    private static int balance;
     private static DatabaseHelper db;
 
 
@@ -46,7 +48,6 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         setContentView(R.layout.activity_main);
         this.nameView = findViewById(R.id.nameView);
         this.phoneView = findViewById(R.id.phoneView);
-        balanceView = findViewById(R.id.balanceView);
         db = new DatabaseHelper(this);
 
 
@@ -63,12 +64,10 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
 
         if(savedInstanceState != null && !savedInstanceState.isEmpty()) {
             phoneNumber = savedInstanceState.getString("phoneNumber");
-            balance = savedInstanceState.getInt("balance");
             name = savedInstanceState.getString("name");
             this.isNameSet = savedInstanceState.getBoolean("isNameSet");
             this.nameView.setText(name);
             this.phoneView.setText(phoneNumber);
-            balanceView.setText(String.valueOf(balance));
 
         }
 
@@ -78,10 +77,8 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         if(this.isNameSet){
             name = sharedPreferences.getString("username", "DefaultUser");
             phoneNumber = sharedPreferences.getString("phoneNumber", "123456789");
-            balance = sharedPreferences.getInt("balance",0);
             this.nameView.setText(name);
             this.phoneView.setText(phoneNumber);
-            balanceView.setText(String.valueOf(balance));
 
             //Toast.makeText(this, "Data loaded\nisNameSet: " + this.isNameSet, Toast.LENGTH_LONG).show();
         } else {
@@ -94,40 +91,50 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         this.registerReceiver(this.br,filter);
     }
 
-    public void getLatestShopping(View view){
-        Cursor res = db.getLastestTransaction("Vásárlás kártyával");
-        res.moveToNext();
-        Log.d("LATEST SHOPPING", "" +res.getString(0) + "   "  + res.getInt(1) + "    " + res.getString(2));
+    public void launchStatistics(View view) {
+        Intent intent = new Intent(this, StatisticsActivity.class);
+        startActivity(intent);
     }
 
-    public void getLatestCredit(View view){
-        Cursor res = db.getLastestTransaction("Jóvárírás");
-        res.moveToNext();
-        Log.d("LATEST CREDIT", "" +res.getString(0) + "   "  + res.getInt(1) + "    " + res.getString(2));
+    public void launchTransactions(View view){
+        Intent intent = new Intent(this, TransactionsActivity.class);
+        startActivity(intent);
     }
 
-    public void getLatestCashPickup(View view){
-        Cursor res = db.getLastestTransaction("Készpénzfelvétel");
-        res.moveToNext();
-        Log.d("LATEST CASH", "" +res.getString(0) + "   "  + res.getInt(1) + "    " + res.getString(2));
+    public void getLatestTransactions(View view){//hiba kezeles
+        Cursor res=null;
+        int count = 0;
+        String errmsg="";
+        if(R.id.latest_shopping_btn == view.getId()) {
+            res = db.getLastestTransaction("Vásárlás kártyával");
+            count = res.getCount();
+            errmsg = getString(R.string.no_shopping_error);
+            res.moveToNext();
+        } else if(R.id.latest_credit_btn == view.getId()){
+            res = db.getLastestTransaction("Jóvárírás");
+            count = res.getCount();
+            errmsg = getString(R.string.no_credit_error);
+            res.moveToNext();
+        } else if(R.id.latest_cash_btn == view.getId()) {
+            res = db.getLastestTransaction("Készpénzfelvétel");
+            count = res.getCount();
+            errmsg = getString(R.string.no_cashpickup_error);
+            res.moveToNext();
+        }
+        if(count<1){
+            DialogFragment errorFragment = new ErrorFragment();
+            errorFragment.show(getSupportFragmentManager(),errmsg);
+        } else {
+            String dateString = res.getString(0);
+            String[] splitString = dateString.split("T");
+            String date = splitString[0];
+            DialogFragment dialogFragment = LatestFragment.newInstance(date, res.getInt(1), res.getString(2));
+            dialogFragment.show(getSupportFragmentManager(), "Latest");
+        }
     }
+
 
     public static boolean insertData(int value, String type, String partner){
-        Cursor res = db.getAllData();
-        if(res.getCount()==0){
-            Log.d("SELECT ALL ", "NO DATA IN DATABASE");
-        } else {
-            StringBuffer buffer = new StringBuffer();
-            while(res.moveToNext()){
-                buffer.append("Date: " + res.getString(0) + "\n");
-                buffer.append("Value: " + res.getInt(1) + "\n");
-                buffer.append("Type: " + res.getString(2) + "\n");
-                buffer.append("Partner: " + res.getString(3) + "\n\n");
-            }
-            Log.d("SELECT ALL ", buffer.toString());
-        }
-
-
         return db.insertData(LocalDateTime.now().toString(),value,type,partner);
 
     }
@@ -139,10 +146,7 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         return name;
     }
 
-    public static void setBalance(int bal){
-        balance=bal;
-        balanceView.setText(String.valueOf(balance));
-    }
+
 
 
     @Override
@@ -170,7 +174,6 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         Toast.makeText(this, "Hi " + name, Toast.LENGTH_LONG).show();
         this.nameView.setText(username);
         this.phoneView.setText(phone);
-        balanceView.setText(String.valueOf(0));
         phoneNumber = phone;
         name = username;
         isNameSet = true;
@@ -184,7 +187,6 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         editor.putString("username", name);
         editor.putString("phoneNumber",phoneNumber);
         editor.putBoolean("isNameSet",this.isNameSet);
-        editor.putInt("balance",balance);
 
         editor.apply();
         //Toast.makeText(this, "Data saved", Toast.LENGTH_LONG).show();
@@ -196,7 +198,6 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         outState.putString("username",this.nameView.getText().toString());
         outState.putString("phoneNumber",this.phoneView.getText().toString());
         outState.putBoolean("isNameSet",this.isNameSet);
-        outState.putInt("balance",balance);
         saveData();
     }
 

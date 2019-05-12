@@ -59,13 +59,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    public Cursor getAllData() {
+    Cursor getAllData() {
         SQLiteDatabase db = this.getWritableDatabase();
         return db.rawQuery("SELECT " + DATE + ", " + VALUE + ", " + TYPE + ", " + PARTNER + " FROM " + TABLE_NAME,null );
     }
 
-    public Cursor getLastestTransaction(String trtype){
+    Cursor getLastestTransaction(String trtype){
         SQLiteDatabase db = this.getWritableDatabase();
         return db.rawQuery("SELECT " + DATE + ", " + VALUE + ", " + PARTNER + " FROM " + TABLE_NAME + " WHERE " + TYPE + "='" + trtype + "' ORDER BY " + DATE + " DESC LIMIT 1 " ,null);
+    }
+
+    int getAmountOfTransactions() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor res = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_NAME,null);
+        res.moveToNext();
+        return res.getInt(0);
+    }
+
+    int getTotalValueOfType(String trtype){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor res = db.rawQuery("SELECT SUM(" + VALUE +") FROM " + TABLE_NAME + " WHERE " + TYPE + "='" + trtype + "'",null );
+        if(res.getCount() == 0)
+            return -1;
+        else {
+            res.moveToNext();
+            return res.getInt(0);
+        }
+    }
+
+    int getAvgValueOfType(String trtype){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor res = db.rawQuery("SELECT AVG(" + VALUE +") FROM " + TABLE_NAME + " WHERE " + TYPE + "='" + trtype + "'",null );
+        if(res.getCount() == 0)
+            return -1;
+        else {
+            res.moveToNext();
+            return res.getInt(0);
+        }
     }
 }

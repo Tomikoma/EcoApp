@@ -42,7 +42,7 @@ public class SmsReceiver extends BroadcastReceiver {
                     msg = message[i].getMessageBody();
                     phoneNo = message[i].getOriginatingAddress();
                 }
-                //Toast.makeText(context,"Message: " + msg + "\nNumber: " + phoneNo, Toast.LENGTH_LONG ).show();
+                Toast.makeText(context,"Message: " + msg + "\nNumber: " + phoneNo, Toast.LENGTH_LONG ).show();
                 if(phoneNo.equals(MainActivity.getPhoneNumber()) && MainActivity.getPhoneNumber()!= null) {
                     //Toast.makeText(context,"Érkezett a banktól SMS!\n", Toast.LENGTH_LONG).show();
                     String convertedMsg = Normalizer.normalize(msg,Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "").toLowerCase();

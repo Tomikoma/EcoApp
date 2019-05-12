@@ -12,4 +12,26 @@
     <string name="shopping_latest">Latest Shopping</string>
     <string name="cashpickup_latest">Latest Cash Pickup</string>
     <string name="credit_latest">Latest Credit</string>
+    <string name="type_transaction">Type of Transaction:</string>
+    <string name="date_transaction">Date:</string>
+    <string name="partner_transaction">Partner:</string>
+    <string name="value_transaction">Amount(Ft):</string>
+    <string name="buttons_additional">Additional Options</string>
+    <string name="transactions">Transactions</string>
+    <string name="statistic">Statictics</string>
+    <string name="errorMessage">An internal failure has occured</string>
+    <string name="no_credit_error">You need to get SMS with type credit!</string>
+    <string name="no_cashpickup_error">You need to get SMS with type cash pickup</string>
+    <string name="no_shopping_error">You nned to get SMS wirh type shopping</string>
+    <string name="nbr_trans_tv">Number of Transactions:</string>
+    <string name="total_shop_tv">Total value of Shopping (Ft):</string>
+    <string name="avg_shop_tv">Average value of Shopping (Ft):</string>
+    <string name="total_credit_tv">Total value of Credits (Ft):</string>
+    <string name="avg_credit_tv">Average value of Credits (Ft):</string>
+    <string name="total_pickup_tv">Total value of Cash Pickup (Ft):</string>
+    <string name="avg_pickup_tv">Average value of Cash Pickup (Ft):</string>
+    <string name="date_header">Date</string>
+    <string name="type_header">Type</string>
+    <string name="value_header">Amount (Ft)</string>
+    <string name="partner_header">Partner</string>
 </resources>

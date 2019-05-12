@@ -11,5 +11,27 @@
     <string name="shopping_latest">Legutóbbi vásárlás</string>
     <string name="cashpickup_latest">Legutóbbi készpénz felvétel</string>
     <string name="credit_latest">Legutóbbi jóváírás</string>
+    <string name="date_transaction">Dátum:</string>
+    <string name="type_transaction">Tranzakció típusa:</string>
+    <string name="partner_transaction">Partner:</string>
+    <string name="value_transaction">Összeg(Ft):</string>
+    <string name="buttons_additional">További Lehetőségek</string>
+    <string name="transactions">Tranzakciók</string>
+    <string name="statistic">Statisztikák</string>
+    <string name="errorMessage">Belső hiba lépett fel!</string>
+    <string name="no_credit_error">Még nem érkezett SMS, ami jóváírást tartalmazna</string>
+    <string name="no_cashpickup_error">Még nem érkezett SMS, ami készpénzfelvételt tartalmazna</string>
+    <string name="no_shopping_error">Még nem érkezett SMS, ami vásárlással lenne kapcsolatos</string>
+    <string name="nbr_trans_tv">Tranzakciók száma:</string>
+    <string name="total_shop_tv">Vásárlások összértéke (Ft):</string>
+    <string name="avg_shop_tv">Vásárlások átlagos értéke (Ft):</string>
+    <string name="total_credit_tv">Jóváírások  összértéke (Ft):</string>
+    <string name="avg_credit_tv">Jóváírások átlagos értéke (Ft):</string>
+    <string name="total_pickup_tv">Készpénzfelvételek összértéke (Ft):</string>
+    <string name="avg_pickup_tv">Készpénzfelvételek átlagos értéke (Ft):</string>
+    <string name="date_header">Dátum</string>
+    <string name="type_header">Típus:</string>
+    <string name="value_header">Összeg (Ft)</string>
+    <string name="partner_header">Partner</string>
 
 </resources>
