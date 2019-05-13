@@ -52,6 +52,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(DATE,date);
         contentValues.put(PARTNER,partner);
         long result = db.insert(TABLE_NAME,null,contentValues);
+        db.close();
         if(result == -1){
             return false;
         } else {

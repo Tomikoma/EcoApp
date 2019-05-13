@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
 
@@ -27,11 +28,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service
-            android:name=".SmsService"
-            android:enabled="true"
-            android:exported="true">
-        </service>
+        <service android:name=".SmsJobIntentService" android:permission="android.permission.BIND_JOB_SERVICE" />
+        <receiver android:name=".AlarmReceiver">
+            <intent-filter>
+                <action android:name="com.test.intent.action.ALARM" />
+            </intent-filter>
+        </receiver>
         <receiver
             android:name="com.example.ecoapp.SmsReceiver"
             android:enabled="true"

@@ -28,9 +28,6 @@ public class SmsReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.i("SERVICE","BEFORE startservice");
-        context.startService(new Intent(context, SmsService.class));
-        Log.i("SERVICE","AFTER startservice");
         db = new DatabaseHelper(context);
         SharedPreferences sharedPreferences = context.getSharedPreferences(SHARED_PREFS,Context.MODE_PRIVATE);
         this.isNameSet =sharedPreferences.getBoolean("isNameSet",false);
@@ -63,7 +60,7 @@ public class SmsReceiver extends BroadcastReceiver {
                     String convertedMsg = Normalizer.normalize(msg,Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "").toLowerCase();
 
                     boolean isDataInserted = insertData(getForintValueOfString(convertedMsg),getTypeValueOfString(convertedMsg),getPartnerValueOfString(convertedMsg));
-                    Toast.makeText(context, (isDataInserted? "SMS adatai elmentve!" : "SMS adatait nem sikerült elmenteni") + "\n", Toast.LENGTH_LONG).show(); //ird majd at (ne string literalok legyen itt)
+                    Toast.makeText(context, (isDataInserted? "SMS adatai elmentve!" : "SMS adatait nem sikerült elmenteni"), Toast.LENGTH_LONG).show(); //ird majd at (ne string literalok legyen itt)
 
                 } else {
                     Toast.makeText(context,"NULL", Toast.LENGTH_LONG ).show();
