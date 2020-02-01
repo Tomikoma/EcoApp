@@ -1,0 +1,25 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Settings, should always be in the overflow -->
+    <item android:id="@+id/process_messages"
+        android:title="Process messages"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/credits"
+        android:title="Credits"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/pickups"
+        android:title="Pickup"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/shoppings"
+        android:title="Shopping"
+        app:showAsAction="never"
+        />
+</menu>

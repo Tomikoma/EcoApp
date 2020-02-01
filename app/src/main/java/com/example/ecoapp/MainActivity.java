@@ -1,40 +1,42 @@
 package com.example.ecoapp;
 
 import android.Manifest;
-import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.net.Uri;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.text.Normalizer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements SetUsernameFragment.EditNameDialogListener{
 
+    final int REQUEST_CODE_ASK_PERMISSIONS = 123;
     private BroadcastReceiver br;
     private static final int MY_PERMISSIONS_REQUEST_RECEIVE_SMS = 0;
     private static final String SHARED_PREFS = "SsharedPrefs";
-    public static final String CREDIT = "Jóvárírás";
+    public static final String CREDIT = "Jóváírás";
     public static final String SHOPPING = "Vásárlás kártyával";
     public static final String PICKUP = "Készpénzfelvétel";
+
 
 
     private TextView nameView;
@@ -61,6 +63,9 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         db = new DatabaseHelper(this);
 
 
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
+
         nameView.setText("DefaultUsername");
 
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED){
@@ -70,6 +75,9 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECEIVE_SMS}, MY_PERMISSIONS_REQUEST_RECEIVE_SMS);
             }
         }
+
+        if(ContextCompat.checkSelfPermission(getBaseContext(), "android.permission.READ_SMS") != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.READ_SMS"}, REQUEST_CODE_ASK_PERMISSIONS);
 
 
         if(savedInstanceState != null && !savedInstanceState.isEmpty()) {
@@ -93,12 +101,38 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         } else {
             setUser();
         }
-        IntentFilter intentFilter = new IntentFilter("android.provider.Telephony.SMS_RECEIVED");
-        br = new SmsReceiver();
-        registerReceiver(br,intentFilter);
+
+    /*
+        Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
+
+        if (cursor.moveToFirst()) { // must check the result to prevent exception
+            String body ="EMPTY";
+            do {
+                String msgData = "";
+
+                for(int idx=0;idx<cursor.getColumnCount();idx++)
+                {
+                    msgData += " " + cursor.getColumnName(idx) + ":" + cursor.getString(idx);
+                    if(cursor.getColumnName(idx).equals("body"))
+                        body += cursor.getString(idx);
+                }
+                Log.e("MSG",msgData);
+                Toast.makeText(this,body , Toast.LENGTH_LONG).show();
+            } while (cursor.moveToNext());
+        } else {
+            // empty box, no SMS
+        }*/
 
 
 
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.actionbar_menu,menu);
+        return true;
     }
 
 
@@ -122,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
             errmsg = getString(R.string.no_shopping_error);
             res.moveToNext();
         } else if(R.id.latest_credit_btn == view.getId()){
-            res = db.getLastestTransaction("Jóvárírás");
+            res = db.getLastestTransaction("Jóváírás");
             count = res.getCount();
             errmsg = getString(R.string.no_credit_error);
             res.moveToNext();
@@ -142,6 +176,68 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
             DialogFragment dialogFragment = LatestFragment.newInstance(date, res.getInt(1), res.getString(2));
             dialogFragment.show(getSupportFragmentManager(), "Latest");
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        Intent intent;
+        switch (item.getItemId()){
+            case R.id.process_messages:
+                Toast.makeText(this, "Üzenetek feldolgozása...", Toast.LENGTH_LONG).show();
+
+
+                db.deleteAllTransactions();
+                Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
+                if (cursor.moveToFirst()) { // must check the result to prevent exception
+
+                    do {
+                        String msgData = "";
+                        String tempNumber="";
+                        String messageBody = null;
+                        String date = null;
+                        for(int i=0;i<cursor.getColumnCount();i++)
+                        {
+                            msgData += " " + cursor.getColumnName(i) + ":" + cursor.getString(i);
+                            if(cursor.getColumnName(i).equals("address"))
+                                tempNumber = cursor.getString(i);
+                            if(cursor.getColumnName(i).equals("body"))
+                                messageBody = cursor.getString(i);
+                            if(cursor.getColumnName(i).equals("date_sent"))
+                                date = new SimpleDateFormat("yyyy-MM-dd",new Locale("HU")).format(new Date(cursor.getLong(i)));
+                        }
+                        Log.e("MSG",msgData);
+                        Log.e("MSG_DATE",date);
+                        if(tempNumber.equals(phoneNumber) && messageBody!=null) {
+                            Log.e("NUMBER:", phoneNumber);
+                            String convertedMsg = Normalizer.normalize(messageBody, Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "").toLowerCase();
+                            if(convertedMsg.contains("ervenytelenitett") || convertedMsg.contains("postai") || convertedMsg.contains("sikertelen")){
+                                continue;
+                            }
+                            boolean isDataInserted = insertData(getForintValueOfString(convertedMsg), getTypeValueOfString(convertedMsg), getPartnerValueOfString(convertedMsg),date);
+                        }
+                    } while (cursor.moveToNext());
+                } else {
+                    // empty box, no SMS
+                }
+
+                break;
+            case R.id.credits:
+                intent = new Intent(this, PieChartActivity.class);
+                intent.putExtra("PIE_CHART_TYPE",CREDIT);
+                startActivity(intent);
+                break;
+            case R.id.shoppings:
+                intent = new Intent(this, PieChartActivity.class);
+                intent.putExtra("PIE_CHART_TYPE",SHOPPING);
+                startActivity(intent);
+                break;
+            case R.id.pickups:
+                intent = new Intent(this, PieChartActivity.class);
+                intent.putExtra("PIE_CHART_TYPE",PICKUP);
+                startActivity(intent);
+                break;
+        }
+        return true;
     }
 
 
@@ -180,6 +276,88 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         saveData();
     }
 
+    private int getForintValueOfString(String convertedMsg) {
+        if(convertedMsg.contains("vasarlas") || convertedMsg.contains("kp.felvet")){
+            String endString = ".-ft";
+            if(convertedMsg.contains("huf")){
+                endString = "huf";
+            }
+            String valueString = convertedMsg.substring(convertedMsg.indexOf("osszeg: ")+8,convertedMsg.indexOf(endString));
+            String regexString = valueString.contains(",") ? "," : " ";
+            String[] splittedString = valueString.split(regexString);
+            String unspacedValue ="";
+            for (String s : splittedString) {
+                unspacedValue+= s;
+            }
+            int value = Integer.parseInt(unspacedValue);
+            return value;
+        } else if(convertedMsg.contains("jovairas")) {
+            String valueString = convertedMsg.substring(convertedMsg.indexOf("jovairas")+9,convertedMsg.indexOf("ft"));
+            String[] splittedString = valueString.split(",");
+            String unspacedValue ="";
+            for (String s : splittedString) {
+                unspacedValue+= s;
+            }
+            int value = Integer.parseInt(unspacedValue);
+            return value;
+        }
+        return -1;
+    }
+
+    private String getTypeValueOfString(String convertedMsg) {
+        if(convertedMsg.contains("vasarlas")){
+            return "Vásárlás kártyával";
+        } else if(convertedMsg.contains("kp.felvet")) {
+            return "Készpénzfelvétel";
+        } else if(convertedMsg.contains("jovairas")){
+            return "Jóváírás";
+        }
+        return null;
+    }
+
+    private String getPartnerValueOfString(String convertedMsg) {
+        if(convertedMsg.contains("vasarlas") || convertedMsg.contains("kp.felvet")){
+            if(convertedMsg.contains("huf")) {
+                String[] splittedString = convertedMsg.split(",");
+                return splittedString[splittedString.length-2];
+                //return convertedMsg.substring(convertedMsg.indexOf("huf") + 5, convertedMsg.indexOf("egyenleg"));
+            } else
+                return convertedMsg.substring(convertedMsg.indexOf(".-ft")+5, convertedMsg.indexOf("egyenleg"));
+        } else if(convertedMsg.contains("jovairas")){
+            String name = Normalizer.normalize(this.name,Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "").toLowerCase();
+            if(convertedMsg.contains(name)) {
+                return convertedMsg.substring(convertedMsg.lastIndexOf("ft") + 2, convertedMsg.indexOf(name));
+            } else {
+                return "Nem sikerült lekérni a jóváíráshoz tartozó partnert";
+            }
+        }
+        return null;
+    }
+
+    private int getBalanceFromString(String convertedMsg){
+        if(convertedMsg.contains("vasarlas") || convertedMsg.contains("kp.felvet")){
+            String valueString = convertedMsg.substring(convertedMsg.lastIndexOf("egyenleg")+9,convertedMsg.lastIndexOf("ft"));
+            return Integer.parseInt(valueString);
+
+        } else if(convertedMsg.contains("jovairas")){
+            String valueString = convertedMsg.substring(convertedMsg.lastIndexOf("egyenleg+")+9,convertedMsg.lastIndexOf("ft"));
+            String[] splittedString = valueString.split(",");
+            String unspacedValue ="";
+            for (String s : splittedString) {
+                unspacedValue+= s;
+            }
+            return Integer.parseInt(unspacedValue);
+
+        }
+        return -1;
+    }
+
+    private  boolean insertData(int value, String type, String partner, String date){
+        return db.insertData(date,value,type,partner);
+
+    }
+
+
     private void saveData() {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -203,8 +381,6 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver(br);
-
         super.onDestroy();
     }
 

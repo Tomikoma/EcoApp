@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.ecoapp">
-
     <!-- To access Google+ APIs: -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
@@ -9,15 +8,17 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
-
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".PieChartActivity"></activity>
 
-
+        <meta-data
+            android:name="com.google.android.actions"
+            android:resource="@menu/actionbar_menu" />
 
         <activity android:name=".TransactionsActivity" />
         <activity android:name=".StatisticsActivity" />
@@ -28,18 +29,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".SmsJobIntentService" android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
+            android:name=".SmsJobIntentService"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
         <receiver android:name=".AlarmReceiver">
             <intent-filter>
                 <action android:name="com.test.intent.action.ALARM" />
             </intent-filter>
         </receiver>
         <receiver
-            android:name="com.example.ecoapp.SmsReceiver"
+            android:name=".SmsReceiver"
             android:enabled="true"
             android:exported="true"
-            android:label="RestartServiceWhenStopped">
-        </receiver>
+            android:label="RestartServiceWhenStopped" />
     </application>
 
 </manifest>
