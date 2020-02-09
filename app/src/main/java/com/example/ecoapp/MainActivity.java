@@ -184,41 +184,47 @@ public class MainActivity extends AppCompatActivity implements SetUsernameFragme
         switch (item.getItemId()){
             case R.id.process_messages:
                 Toast.makeText(this, "Üzenetek feldolgozása...", Toast.LENGTH_LONG).show();
+                final Toast toast = Toast.makeText(this, "Üzenetek feldolgozva!", Toast.LENGTH_LONG);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        db.deleteAllTransactions();
+                        Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
+                        if (cursor.moveToFirst()) { // must check the result to prevent exception
 
-
-                db.deleteAllTransactions();
-                Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
-                if (cursor.moveToFirst()) { // must check the result to prevent exception
-
-                    do {
-                        String msgData = "";
-                        String tempNumber="";
-                        String messageBody = null;
-                        String date = null;
-                        for(int i=0;i<cursor.getColumnCount();i++)
-                        {
-                            msgData += " " + cursor.getColumnName(i) + ":" + cursor.getString(i);
-                            if(cursor.getColumnName(i).equals("address"))
-                                tempNumber = cursor.getString(i);
-                            if(cursor.getColumnName(i).equals("body"))
-                                messageBody = cursor.getString(i);
-                            if(cursor.getColumnName(i).equals("date_sent"))
-                                date = new SimpleDateFormat("yyyy-MM-dd",new Locale("HU")).format(new Date(cursor.getLong(i)));
+                            do {
+                                String msgData = "";
+                                String tempNumber="";
+                                String messageBody = null;
+                                String date = null;
+                                for(int i=0;i<cursor.getColumnCount();i++)
+                                {
+                                    msgData += " " + cursor.getColumnName(i) + ":" + cursor.getString(i);
+                                    if(cursor.getColumnName(i).equals("address"))
+                                        tempNumber = cursor.getString(i);
+                                    if(cursor.getColumnName(i).equals("body"))
+                                        messageBody = cursor.getString(i);
+                                    if(cursor.getColumnName(i).equals("date_sent"))
+                                        date = new SimpleDateFormat("yyyy-MM-dd",new Locale("HU")).format(new Date(cursor.getLong(i)));
+                                }
+                                Log.e("MSG",msgData);
+                                Log.e("MSG_DATE",date);
+                                if(tempNumber.equals(phoneNumber) && messageBody!=null) {
+                                    Log.e("NUMBER:", phoneNumber);
+                                    String convertedMsg = Normalizer.normalize(messageBody, Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "").toLowerCase();
+                                    if(convertedMsg.contains("ervenytelenitett") || convertedMsg.contains("postai") || convertedMsg.contains("sikertelen")){
+                                        continue;
+                                    }
+                                    boolean isDataInserted = insertData(getForintValueOfString(convertedMsg), getTypeValueOfString(convertedMsg), getPartnerValueOfString(convertedMsg),date);
+                                }
+                            } while (cursor.moveToNext());
+                            toast.show();
+                        } else {
+                            // empty box, no SMS
                         }
-                        Log.e("MSG",msgData);
-                        Log.e("MSG_DATE",date);
-                        if(tempNumber.equals(phoneNumber) && messageBody!=null) {
-                            Log.e("NUMBER:", phoneNumber);
-                            String convertedMsg = Normalizer.normalize(messageBody, Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "").toLowerCase();
-                            if(convertedMsg.contains("ervenytelenitett") || convertedMsg.contains("postai") || convertedMsg.contains("sikertelen")){
-                                continue;
-                            }
-                            boolean isDataInserted = insertData(getForintValueOfString(convertedMsg), getTypeValueOfString(convertedMsg), getPartnerValueOfString(convertedMsg),date);
-                        }
-                    } while (cursor.moveToNext());
-                } else {
-                    // empty box, no SMS
-                }
+                    }
+                }).start();
+
 
                 break;
             case R.id.credits:
